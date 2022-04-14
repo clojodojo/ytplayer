@@ -86,8 +86,6 @@
     "Play"]
    [:button {:on-click play-next-song-if-able!}
     "Next"]
-   [:div#player {:ref (fn [] (when (:yt-script-loaded? @state)
-                                (on-yt-iframe-api-ready!)))}]
    (when-not (:yt-script-loaded? @state)
      (yt-inject-iframe-script!)
      nil)])
