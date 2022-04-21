@@ -61,6 +61,9 @@
      (play-next-song-if-able!)
      nil))
 
+(defn change-url! [content]
+  (js/history.replaceState nil "" (str "#" (js/encodeURIComponent content))))
+
 (defn on-yt-iframe-api-ready! []
   (reset! yt-player
           (js/YT.Player. "player" #js {:height 390
@@ -73,14 +76,21 @@
 ;; youtube iframe script expects window.onYouTubeIframeAPIReady to exist
 (set! (.-onYouTubeIframeAPIReady js/window) on-yt-iframe-api-ready!)
 
+(defonce _run_once_
+ (let [initial-content (js/decodeURIComponent (.substring js/window.location.hash 1))]
+  (swap! state assoc
+    :song-list-text initial-content
+    :song-list (string/split initial-content #"\n"))))
+
 (defn app-view []
   [:div
    [:textarea {:value (:song-list-text @state)
                :style {:width "40em"}
                :on-change (fn [e]
-                            (swap! state assoc :song-list-text (.. e -target -value))
-                            (swap! state assoc :song-list
-                                   (string/split (.. e -target -value) #"\n")))}]
+                            (change-url! (.. e -target -value))
+                            (swap! state assoc
+                              :song-list-text (.. e -target -value)
+                              :song-list (string/split (.. e -target -value) #"\n")))}]
    "Current Song: " (get (:song-list @state) (:current-song-index @state))
    [:button {:on-click play-current-song!}
     "Play"]
